@@ -94,14 +94,8 @@ impl CasClient {
     /// to the CAS login url.  Use this if you're using Hyper as you web
     /// server
     pub fn login_redirect(&self, mut res: Response) {
-        {
-            let mut s = res.status_mut();
-            *s = StatusCode::Found;
-        }
-        {
-            let mut h = res.headers_mut();
-            h.set::<Location>(Location(self.get_login_url()));
-        }
+        *res.status_mut() = StatusCode::Found;
+        res.headers_mut().set::<Location>(Location(self.get_login_url()));
         res.send(b"").unwrap();
     }
 
@@ -115,14 +109,8 @@ impl CasClient {
     /// to the CAS logout url.  use this if you're using Hyper as your web
     /// server
     pub fn logout_redirect(&self, mut res: Response) {
-        {
-            let mut s = res.status_mut();
-            *s = StatusCode::Found;
-        }
-        {
-            let mut h = res.headers_mut();
-            h.set::<Location>(Location(self.get_logout_url()));
-        }
+        *res.status_mut() = StatusCode::Found;
+        res.headers_mut().set::<Location>(Location(self.get_logout_url()));
         res.send(b"").unwrap();
     }
 
