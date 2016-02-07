@@ -171,6 +171,8 @@ impl CasClient {
             }
         }
 
-        Ok(ServiceResponse::Success("mtb89".to_string()))
+        let error = "did not detect authentication reply from CAS server"
+            .to_string();
+        Ok(ServiceResponse::Failure(error))
     }
 }
