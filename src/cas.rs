@@ -104,7 +104,7 @@ impl CasClient {
     /// Get the URL to redirect to for logout.  Use this if you are not using
     /// Hyper as your web server
     pub fn get_logout_url(&self) -> String {
-        self.login_url.serialize()
+        self.logout_url.serialize()
     }
 
     /// Consumes a hyper::server::response::Response to return a 302 redirect
