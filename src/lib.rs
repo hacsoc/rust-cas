@@ -1,5 +1,4 @@
-
-mod cas;
+pub mod cas;
 
 #[cfg(test)]
 mod test {
