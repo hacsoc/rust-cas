@@ -17,6 +17,7 @@ pub type Name = String;
 pub type TicketError = String;
 
 /// The details of a CAS server.  All URLs are the full urls
+#[derive(Debug)]
 pub struct CasClient {
     /// Login url (such as https://login.case.edu/cas/login)
     login_url: Url,
@@ -31,6 +32,7 @@ pub struct CasClient {
 }
 
 /// The response from the server from `verify_ticket`
+#[derive(Debug)]
 pub enum ServiceResponse {
     /// Returned on successful login
     Success(Name),
@@ -38,12 +40,14 @@ pub enum ServiceResponse {
     Failure(TicketError),
 }
 
+#[derive(Debug)]
 enum XmlMatchStatus {
     None,
     ExpectSuccess,
 }
 
 /// Errors that can happen when verifying.  Xml is unlikely.
+#[derive(Debug)]
 pub enum VerifyError {
     Hyper(HyperError),
     Xml(XmlError),
