@@ -4,12 +4,13 @@ extern crate xml;
 
 use self::url::{Url, ParseError};
 use self::hyper::server::response::Response;
+use self::hyper::server::request::Request;
 use self::hyper::status::StatusCode;
 use self::hyper::header::Location;
 use self::hyper::Client;
 use self::hyper::error::Error as HyperError;
-use self::xml::reader::{EventReader, XmlEvent};
-use self::xml::reader::Error as XmlError;
+use self::hyper::uri::RequestUri;
+use self::xml::reader::{EventReader, XmlEvent, Error as XmlError};
 
 /// The username returned by `verify_ticket` on success
 pub type Name = String;
@@ -51,6 +52,9 @@ enum XmlMatchStatus {
 pub enum VerifyError {
     Hyper(HyperError),
     Xml(XmlError),
+    Url(ParseError),
+    UnsupportedUriType,
+    NoTicketFound,
 }
 
 impl From<HyperError> for VerifyError {
@@ -61,6 +65,11 @@ impl From<HyperError> for VerifyError {
 impl From<XmlError> for VerifyError {
     fn from(err: XmlError) -> VerifyError {
         VerifyError::Xml(err)
+    }
+}
+impl From<ParseError> for VerifyError {
+    fn from(err: ParseError) -> VerifyError {
+        VerifyError::Url(err)
     }
 }
 
@@ -162,5 +171,33 @@ impl CasClient {
         let error = "did not detect authentication reply from CAS server"
             .to_string();
         Ok(ServiceResponse::Failure(error))
+    }
+
+    /// Takes a reference to a request, and verifies the ticket in that request.
+    /// Will return an `Err(VerifyError::NoTicketFound)` if it can't find the
+    /// ticket in the url query
+    pub fn verify_from_request(&self, request: &Request)
+        -> Result<ServiceResponse, VerifyError> {
+        let url = match request.uri.clone() {
+            RequestUri::AbsolutePath(s) => try!(Url::parse(
+                    &format!("http://none{}", s))),
+            RequestUri::AbsoluteUri(u) => u,
+            _ => return Err(VerifyError::UnsupportedUriType)
+        };
+        let queries = try!(url.query_pairs().ok_or(VerifyError::NoTicketFound));
+
+        let mut ticket = "".to_string();
+        // TODO: There's got to be a better way to do this?
+        for i in queries {
+            let (v, t) = i;
+            if v == "ticket" {
+                ticket = t;
+            }
+        }
+        if ticket == "" {
+            return Err(VerifyError::NoTicketFound);
+        }
+
+        self.verify_ticket(&ticket)
     }
 }
