@@ -4,6 +4,6 @@ version = "0.2.0"
 authors = ["Matthew Bentley <matthew.t.bentley@gmail.com>"]
 
 [dependencies]
-hyper = "0.6.16"
-url = "0.2.38"
-xml-rs = "*"
+hyper = "^0.6"
+url = "^0.2"
+xml-rs = "^0.3"
