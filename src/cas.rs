@@ -76,16 +76,16 @@ impl From<ParseError> for VerifyError {
 impl CasClient {
     /// Construct a new CasClient. The for each url except service_url, the
     /// \<thing\>_path is concatinated onto base_url to form the Url
-    pub fn new(
-        base_url: &str, login_path: &str, logout_path: &str, verify_path: &str,
-        service_url: &str) -> Result<CasClient, ParseError> {
+    pub fn new(base_url: &str,
+               login_path: &str,
+               logout_path: &str,
+               verify_path: &str,
+               service_url: &str)
+               -> Result<CasClient, ParseError> {
         Ok(CasClient {
-            login_url: try!(
-                Url::parse(&format!("{}{}", base_url, login_path))),
-            logout_url: try!(
-                Url::parse(&format!("{}{}", base_url, logout_path))),
-            verify_url: try!(
-                Url::parse(&format!("{}{}", base_url, verify_path))),
+            login_url: try!(Url::parse(&format!("{}{}", base_url, login_path))),
+            logout_url: try!(Url::parse(&format!("{}{}", base_url, logout_path))),
+            verify_url: try!(Url::parse(&format!("{}{}", base_url, verify_path))),
             service_url: try!(Url::parse(service_url)),
         })
     }
@@ -132,8 +132,7 @@ impl CasClient {
     /// `Ok(ServiceResponse::Failure(reason))`, where reason is the reason for
     /// the failure.  In the event of an http error or an xml error, this
     /// returns Err(VerifyError)
-    pub fn verify_ticket(&self, ticket: &str)
-        -> Result<ServiceResponse, VerifyError> {
+    pub fn verify_ticket(&self, ticket: &str) -> Result<ServiceResponse, VerifyError> {
         let mut url: Url = self.verify_url.clone();
         let param = vec![
             ("service", self.service_url.serialize()),
@@ -148,12 +147,11 @@ impl CasClient {
         for e in parser {
             match try!(e) {
                 XmlEvent::StartElement { name, attributes, .. } => {
-                    if name.local_name == "authenticationSuccess".to_string() {
+                    if name.local_name == "authenticationSuccess" {
                         status = XmlMatchStatus::ExpectSuccess;
-                    } else if name.local_name == "authenticationFailure"
-                        .to_string() {
-                            let reason = attributes[0].value.clone();
-                            return Ok(ServiceResponse::Failure(reason));
+                    } else if name.local_name == "authenticationFailure" {
+                        let reason = attributes[0].value.clone();
+                        return Ok(ServiceResponse::Failure(reason));
                     }
                 }
                 XmlEvent::Characters(s) => {
@@ -168,25 +166,22 @@ impl CasClient {
             }
         }
 
-        let error = "did not detect authentication reply from CAS server"
-            .to_string();
+        let error = "did not detect authentication reply from CAS server".to_owned();
         Ok(ServiceResponse::Failure(error))
     }
 
     /// Takes a reference to a request, and verifies the ticket in that request.
     /// Will return an `Err(VerifyError::NoTicketFound)` if it can't find the
     /// ticket in the url query
-    pub fn verify_from_request(&self, request: &Request)
-        -> Result<ServiceResponse, VerifyError> {
+    pub fn verify_from_request(&self, request: &Request) -> Result<ServiceResponse, VerifyError> {
         let url = match request.uri.clone() {
-            RequestUri::AbsolutePath(s) => try!(Url::parse(
-                    &format!("http://none{}", s))),
+            RequestUri::AbsolutePath(s) => try!(Url::parse(&format!("http://none{}", s))),
             RequestUri::AbsoluteUri(u) => u,
-            _ => return Err(VerifyError::UnsupportedUriType)
+            _ => return Err(VerifyError::UnsupportedUriType),
         };
         let queries = try!(url.query_pairs().ok_or(VerifyError::NoTicketFound));
 
-        let mut ticket = "".to_string();
+        let mut ticket = "".to_owned();
         // TODO: There's got to be a better way to do this?
         for i in queries {
             let (v, t) = i;
